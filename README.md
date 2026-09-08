@@ -171,7 +171,11 @@ Currently strengthening my problem-solving skills using **Java**.
 
 <div align="center">
 
-[![Satyam's github activity graph](https://github-readme-activity-graph.vercel.app/graph?username=Satyakush&theme=tokyo-night&hide_border=true)](https://github.com/Satyakush)
+<img
+  src="https://raw.githubusercontent.com/Satyakush/Satyakush/output/activity-graph.svg"
+  alt="Satyam's GitHub Activity Graph"
+  width="100%"
+/>
 
 </div>
 
