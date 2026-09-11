@@ -145,28 +145,6 @@ Currently strengthening my problem-solving skills using **Java**.
 
 ---
 
-## 📊 GitHub Stats
-
-<div align="center">
-
-<img src="https://github-readme-stats.vercel.app/api?username=Satyakush&show_icons=true&theme=tokyonight&hide_border=true" />
-
-<img src="https://github-readme-stats.vercel.app/api/top-langs/?username=Satyakush&layout=compact&theme=tokyonight&hide_border=true" />
-
-</div>
-
----
-
-## 🔥 GitHub Streak
-
-<div align="center">
-
-<img src="https://streak-stats.demolab.com?user=Satyakush&theme=tokyonight&hide_border=true" />
-
-</div>
-
----
-
 ## 📈 Contribution Graph
 
 <div align="center">
