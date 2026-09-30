@@ -103,6 +103,9 @@ A full-stack workflow connecting event organizers, photographers and customers.
 **Stack:** React · Node.js · Express · MongoDB · Cloudinary · JWT
 
 <p>
+<a href="https://trizen-photo-platform.vercel.app/">
+<img src="https://img.shields.io/badge/Live%20Demo-2563eb?style=flat-square&logo=vercel&logoColor=white" alt="Live demo" />
+</a>
 <a href="https://github.com/Satyakush/trizen-photo-platform">
 <img src="https://img.shields.io/badge/Source%20Code-111827?style=flat-square&logo=github&logoColor=white" alt="Source code" />
 </a>
@@ -129,6 +132,12 @@ Built during my internship at **NTPC Vindhyachal** to support procurement workfl
 
 **Stack:** React · Node.js · Express · MongoDB · Power BI
 
+<p>
+<a href="https://ntpc-frontend-kappa.vercel.app/">
+<img src="https://img.shields.io/badge/Live%20Demo-2563eb?style=flat-square&logo=vercel&logoColor=white" alt="Live demo" />
+</a>
+</p>
+
 </td>
 <td width="50%" valign="top">
 
@@ -148,6 +157,9 @@ A crowdfunding application focused on campaign management and secure user workfl
 **Stack:** React · Node.js · Express · MongoDB · JWT · Cloudinary
 
 <p>
+<a href="https://crowdfund-frontend-one.vercel.app/">
+<img src="https://img.shields.io/badge/Live%20Demo-2563eb?style=flat-square&logo=vercel&logoColor=white" alt="Live demo" />
+</a>
 <a href="https://github.com/Satyakush/Reward_Based_Crowdfund_Platform">
 <img src="https://img.shields.io/badge/Source%20Code-111827?style=flat-square&logo=github&logoColor=white" alt="Source code" />
 </a>
