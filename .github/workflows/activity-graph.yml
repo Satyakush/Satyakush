@@ -5,9 +5,14 @@ on:
     - cron: "0 */12 * * *"
   workflow_dispatch:
 
+concurrency:
+  group: activity-graph
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     permissions:
       contents: write
@@ -15,19 +20,41 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Generate activity graph
-        uses: maurodesouza/github-readme-activity-graph-action@v1
-        with:
-          username: Satyakush
-          options: theme=tokyo-night&hide_border=true&area=true&radius=8
-          output_path: dist/activity-graph.svg
-          token: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p dist
+
+          curl --fail --silent --show-error --location             --max-time 60             "https://github-readme-activity-graph.vercel.app/graph?username=Satyakush&theme=tokyo-night&hide_border=true&area=true&radius=8"             -o dist/activity-graph.svg
+
+          test -s dist/activity-graph.svg
+          grep -q "<svg" dist/activity-graph.svg
 
       - name: Publish activity graph
-        uses: crazy-max/ghaction-github-pages@v3.1.0
-        with:
-          target_branch: output
-          build_dir: dist
+        shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin output:output
+          git checkout output
+
+          cp dist/activity-graph.svg activity-graph.svg
+
+          if git diff --quiet -- activity-graph.svg; then
+            echo "Activity graph is already up to date."
+            exit 0
+          fi
+
+          git add activity-graph.svg
+          git commit -m "chore: update activity graph"
+          git push origin output
