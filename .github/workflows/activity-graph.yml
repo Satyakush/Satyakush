@@ -25,28 +25,161 @@ jobs:
 
       - name: Generate activity graph
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
 
           mkdir -p dist
 
-          curl --fail --silent --show-error --location             --max-time 60             "https://github-readme-activity-graph.vercel.app/graph?username=Satyakush&theme=tokyo-night&hide_border=true&area=true&radius=8"             -o dist/activity-graph.svg
+          node <<'NODE'
+          const fs = require("fs");
+
+          const query = `
+            query($login: String!) {
+              user(login: $login) {
+                contributionsCollection {
+                  contributionCalendar {
+                    totalContributions
+                    weeks {
+                      contributionDays {
+                        date
+                        contributionCount
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          `;
+
+          async function main() {
+            const response = await fetch("https://api.github.com/graphql", {
+              method: "POST",
+              headers: {
+                "Authorization": `Bearer ${process.env.GITHUB_TOKEN}`,
+                "Accept": "application/vnd.github+json",
+                "Content-Type": "application/json",
+                "User-Agent": "Satyakush-activity-graph"
+              },
+              body: JSON.stringify({
+                query,
+                variables: { login: "Satyakush" }
+              })
+            });
+
+            const body = await response.json();
+
+            if (!response.ok || body.errors) {
+              console.error(JSON.stringify(body, null, 2));
+              throw new Error(`GitHub GraphQL request failed with HTTP ${response.status}`);
+            }
+
+            const calendar = body?.data?.user?.contributionsCollection?.contributionCalendar;
+            const days = calendar?.weeks?.flatMap(week => week.contributionDays) ?? [];
+
+            if (days.length < 300) {
+              throw new Error(`GitHub returned an incomplete contribution calendar: ${days.length} days`);
+            }
+
+            const width = 1200;
+            const height = 420;
+            const chart = { left: 78, right: 32, top: 92, bottom: 72 };
+            const plotWidth = width - chart.left - chart.right;
+            const plotHeight = height - chart.top - chart.bottom;
+
+            const counts = days.map(day => Number(day.contributionCount) || 0);
+            const max = Math.max(1, ...counts);
+            const points = counts.map((count, index) => {
+              const x = chart.left + (index / Math.max(1, counts.length - 1)) * plotWidth;
+              const y = chart.top + plotHeight - (count / max) * plotHeight;
+              return [x, y];
+            });
+
+            const linePath = points
+              .map(([x, y], index) => `${index === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`)
+              .join(" ");
+
+            const baseline = chart.top + plotHeight;
+            const areaPath = `${linePath} L ${points[points.length - 1][0].toFixed(2)} ${baseline} L ${points[0][0].toFixed(2)} ${baseline} Z`;
+
+            const gridValues = [0, Math.ceil(max * 0.25), Math.ceil(max * 0.5), Math.ceil(max * 0.75), max];
+            const grid = gridValues.map(value => {
+              const y = chart.top + plotHeight - (value / max) * plotHeight;
+              return `
+                <line x1="${chart.left}" y1="${y.toFixed(2)}" x2="${width - chart.right}" y2="${y.toFixed(2)}"
+                  stroke="#70a5fd" stroke-opacity="0.18" stroke-dasharray="3 6"/>
+                <text x="${chart.left - 14}" y="${(y + 5).toFixed(2)}" text-anchor="end"
+                  fill="#94a3b8" font-size="13">${value}</text>
+              `;
+            }).join("");
+
+            const monthLabels = [];
+            let previousMonth = "";
+            days.forEach((day, index) => {
+              const month = day.date.slice(0, 7);
+              if (month !== previousMonth) {
+                const x = chart.left + (index / Math.max(1, days.length - 1)) * plotWidth;
+                const label = new Date(`${day.date}T00:00:00Z`).toLocaleString("en-US", {
+                  month: "short",
+                  timeZone: "UTC"
+                });
+                monthLabels.push(`<text x="${x.toFixed(2)}" y="${height - 32}" fill="#94a3b8" font-size="13">${label}</text>`);
+                previousMonth = month;
+              }
+            });
+
+            const total = Number(calendar.totalContributions) || counts.reduce((sum, value) => sum + value, 0);
+            const generatedAt = new Date().toISOString().slice(0, 16).replace("T", " ");
+
+            const svg = `<?xml version="1.0" encoding="UTF-8"?>
+          <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100%" height="100%" rx="8" fill="#1a1b27"/>
+            <text x="${chart.left}" y="38" fill="#70a5fd" font-family="Segoe UI, Ubuntu, sans-serif" font-size="21" font-weight="600">
+              Satyakush's GitHub Activity
+            </text>
+            <text x="${chart.left}" y="63" fill="#94a3b8" font-family="Segoe UI, Ubuntu, sans-serif" font-size="14">
+              ${total.toLocaleString()} contributions in the last year
+            </text>
+
+            <g font-family="Segoe UI, Ubuntu, sans-serif">
+              ${grid}
+              <path d="${areaPath}" fill="#70a5fd" fill-opacity="0.10"/>
+              <path d="${linePath}" stroke="#70a5fd" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+              <circle cx="${points[points.length - 1][0].toFixed(2)}" cy="${points[points.length - 1][1].toFixed(2)}" r="4.5" fill="#22d3ee"/>
+              ${monthLabels.join("")}
+            </g>
+
+            <text x="${width - chart.right}" y="${height - 10}" text-anchor="end"
+              fill="#64748b" font-family="Segoe UI, Ubuntu, sans-serif" font-size="11">
+              Updated ${generatedAt} UTC
+            </text>
+          </svg>
+          `;
+
+            fs.writeFileSync("dist/activity-graph.svg", svg);
+          }
+
+          main().catch(error => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
 
           test -s dist/activity-graph.svg
           grep -q "<svg" dist/activity-graph.svg
+          grep -q "Satyakush's GitHub Activity" dist/activity-graph.svg
 
       - name: Publish activity graph
         shell: bash
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git fetch origin output:output
-          git checkout output
+          git fetch origin output
+          git switch --force-create output --track origin/output
 
           cp dist/activity-graph.svg activity-graph.svg
 
