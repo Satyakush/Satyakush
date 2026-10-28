@@ -227,6 +227,16 @@ My focus is not just solving individual problems, but recognizing **patterns, co
 
 ---
 
+## 📈 GitHub Activity
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Satyakush/Satyakush/output/activity-graph.svg" alt="GitHub contribution activity over the last year" width="100%" />
+</p>
+
+<p align="center">
+  <sub>Automatically refreshed by GitHub Actions. The graph reflects GitHub's contribution calendar and may update after GitHub's own contribution processing.</sub>
+</p>
+
 ## 📊 GitHub Snapshot
 
 <p align="center">
