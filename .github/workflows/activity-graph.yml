@@ -57,11 +57,15 @@ jobs:
           `;
 
           async function main() {
+            if (!process.env.GITHUB_TOKEN) {
+              throw new Error("GITHUB_TOKEN is missing; check the workflow token configuration.");
+            }
+
             let body;
             let lastError;
 
-            // GitHub occasionally returns an HTML gateway/error page instead of JSON.
-            // Retry transient responses and validate the payload before using it.
+            // Retry transient transport/gateway/rate-limit failures only. Permanent
+            // authentication, configuration, and GraphQL errors should fail fast.
             for (let attempt = 1; attempt <= 4; attempt++) {
               try {
                 const response = await fetch("https://api.github.com/graphql", {
@@ -75,32 +79,45 @@ jobs:
                   body: JSON.stringify({
                     query,
                     variables: { login: "Satyakush" }
-                  })
+                  }),
+                  signal: AbortSignal.timeout(15000)
                 });
 
                 const contentType = response.headers.get("content-type") || "";
                 const raw = await response.text();
+                const transientStatus = [408, 425, 429, 500, 502, 503, 504].includes(response.status);
+                const gatewayHtml = !contentType.toLowerCase().includes("application/json");
 
-                if (!response.ok || !contentType.includes("application/json")) {
-                  throw new Error(`GitHub GraphQL returned HTTP ${response.status} (${contentType}): ${raw.slice(0, 180)}`);
+                if (!response.ok || gatewayHtml) {
+                  const error = new Error(
+                    `GitHub GraphQL returned HTTP ${response.status} (${contentType}): ${raw.slice(0, 180)}`
+                  );
+                  error.retryable = transientStatus || (response.ok && gatewayHtml);
+                  throw error;
                 }
 
                 body = JSON.parse(raw);
                 if (body.errors) {
                   throw new Error(`GitHub GraphQL errors: ${JSON.stringify(body.errors)}`);
                 }
+                if (!body.data?.user?.contributionsCollection?.contributionCalendar) {
+                  throw new Error("GitHub GraphQL response did not contain the expected contribution calendar.");
+                }
                 break;
               } catch (error) {
                 lastError = error;
-                if (attempt === 4) break;
+                const retryable = error.retryable === true || error.name === "TypeError" || error.name === "TimeoutError";
+                if (!retryable || attempt === 4) {
+                  throw new Error(`GitHub activity query failed${retryable ? " after retries" : ""}: ${error.message}`);
+                }
                 const delayMs = attempt * 1500;
-                console.warn(`GraphQL attempt ${attempt} failed: ${error.message}. Retrying in ${delayMs}ms.`);
+                console.warn(`Transient GraphQL failure on attempt ${attempt}: ${error.message}. Retrying in ${delayMs}ms.`);
                 await new Promise(resolve => setTimeout(resolve, delayMs));
               }
             }
 
             if (!body || !body.data) {
-              throw new Error(`GitHub GraphQL request failed after retries: ${lastError?.message || "empty response"}`);
+              throw new Error(`GitHub GraphQL request failed: ${lastError?.message || "empty response"}`);
             }
 
             const calendar = body?.data?.user?.contributionsCollection?.contributionCalendar;
