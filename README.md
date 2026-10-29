@@ -240,8 +240,8 @@ My focus is not just solving individual problems, but recognizing **patterns, co
 ## 📊 GitHub Snapshot
 
 <p align="center">
-  <img height="170" src="https://github-readme-stats.vercel.app/api?username=Satyakush&show_icons=true&hide_border=true&bg_color=0f172a&title_color=38bdf8&text_color=e2e8f0&icon_color=22d3ee&rank_icon=github" alt="GitHub statistics" />
-  <img height="170" src="https://github-readme-stats.vercel.app/api/top-langs/?username=Satyakush&layout=compact&hide_border=true&bg_color=0f172a&title_color=38bdf8&text_color=e2e8f0" alt="Top languages" />
+  <img height="170" src="https://github-stats-extended.vercel.app/api?username=Satyakush&show_icons=true&include_all_commits=true&hide_border=true&bg_color=0f172a&title_color=38bdf8&text_color=e2e8f0&icon_color=22d3ee&rank_icon=github" alt="GitHub statistics" />
+  <img height="170" src="https://github-stats-extended.vercel.app/api/top-langs/?username=Satyakush&layout=compact&langs_count=8&size_weight=0.5&count_weight=0.5&hide_border=true&bg_color=0f172a&title_color=38bdf8&text_color=e2e8f0" alt="Top languages" />
 </p>
 
 <p align="center">
